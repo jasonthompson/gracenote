@@ -7,52 +7,53 @@ class Gracenote
   @@ALL_RESULTS = '1'
   @@BEST_MATCH_ONLY = '0'
 
+  attr_reader :client_id, :client_tag, :user_id
   # Function: initialize
   # Sets the following instance variables
-  #   clientID
-  #   clientTag
-  #   userID
-  #   apiURL
+  #   client_id
+  #   client_tag
+  #   user_id
+  #   api_url
   def initialize (spec)
-    if(spec[:clientID].nil? || spec[:clientID] == "") 
-      raise "clientID cannot be nil"
+    if(spec[:client_id].nil? || spec[:client_id] == "") 
+      raise "client_id cannot be nil"
     end
-    if(spec[:clientTag].nil? || spec[:clientTag] == "")
-      raise "clientTag cannot be nil"
+    if(spec[:client_tag].nil? || spec[:client_tag] == "")
+      raise "client_tag cannot be nil"
     end
     
-    @clientID = spec[:clientID]
-    @clientTag = spec[:clientTag]
-    @userID = spec[:userID].nil? ? nil : spec[:userID]
-    @apiURL = "https://c" + @clientID + ".web.cddbp.net/webapi/xml/1.0/"
+    @client_id = spec[:client_id]
+    @client_tag = spec[:client_tag]
+    @user_id = spec[:user_id].nil? ? nil : spec[:user_id]
+    @api_url = "https://c" + @client_id + ".web.cddbp.net/webapi/xml/1.0/"
   end
   
   # public methods
   public 
 
   # Function: registerUser 
-  # Registers a user and returns userID
-  def registerUser (clientID = nil)
-    if(clientID.nil?)
-      clientID = @clientID + "-" + @clientTag
+  # Registers a user and returns user_id
+  def registerUser (client_id = nil)
+    if(client_id.nil?)
+      client_id = @client_id + "-" + @client_tag
     end
     
-    if not @userID.nil?
+    if not @user_id.nil?
       p "user already registered. No need to register again"
-      return @userID
+      return @user_id
     end
 
     #send req to server and get user ID
     data =  "<QUERIES>
               <QUERY CMD='REGISTER'>
-                <CLIENT>"+ clientID +"</CLIENT>
+                <CLIENT>"+ client_id +"</CLIENT>
               </QUERY>
             </QUERIES>"
-    resp = HTTP.post(@apiURL, data)
+    resp = HTTP.post(@api_url, data)
     resp = checkRES resp
-    @userID = resp['RESPONSES']['RESPONSE']['USER']
+    @user_id = resp['RESPONSES']['RESPONSE']['USER']
 
-    return @userID
+    return @user_id
   end
   
   # Function: findTrack 
@@ -63,7 +64,7 @@ class Gracenote
   #   trackTitle
   #   matchMode
   def findTrack(artistName, albumTitle, trackTitle, matchMode = @@ALL_RESULTS)
-    if @userID == nil 
+    if @user_id == nil 
       registerUser
     end
     body = constructQueryBody(artistName, albumTitle, trackTitle, "", "ALBUM_SEARCH", matchMode)
@@ -96,7 +97,7 @@ class Gracenote
   # Arguments:
   #   toc
   def albumToc(toc)
-    if @userID == nil 
+    if @user_id == nil 
       registerUser
     end
     body = "<TOC><OFFSETS>" + toc + "</OFFSETS></TOC>"
@@ -109,7 +110,7 @@ class Gracenote
   # Arguments:
   #   gn_id
   def fetchOETData(gn_id)
-    if @userID == nil 
+    if @user_id == nil 
       registerUser
     end
 
@@ -124,7 +125,7 @@ class Gracenote
               </OPTION>"
 
     data = constructQueryReq(body, "ALBUM_FETCH")
-    resp = HTTP.post(@apiURL, data)
+    resp = HTTP.post(@api_url, data)
     resp = checkRES resp
     
     json = resp["RESPONSES"]
@@ -143,7 +144,7 @@ class Gracenote
   # Arguments:
   #   query
   def api (query)
-    resp = HTTP.post(@apiURL, query)
+    resp = HTTP.post(@api_url, query)
     return parseRES(resp)
   end
   
@@ -156,8 +157,8 @@ class Gracenote
     #construct the XML query
     return  "<QUERIES>
                 <AUTH>
-                    <CLIENT>"+ @clientID + "-" + @clientTag + "</CLIENT>
-                    <USER>"+ @userID + "</USER>
+                    <CLIENT>"+ @client_id + "-" + @client_tag + "</CLIENT>
+                    <USER>"+ @user_id + "</USER>
                 </AUTH>
                 <QUERY CMD=\"" + command + "\">
                     " + body + "
