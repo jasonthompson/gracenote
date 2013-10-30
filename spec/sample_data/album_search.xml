@@ -1,0 +1,12 @@
+<queries>
+  <lang>eng</lang>
+  <auth>
+    <client></client>
+    <user></user>
+  </auth>
+  <query cmd="ALBUM_SEARCH">
+    <text type="ARTIST">flying lotus</text>
+    <text type="ALBUM_TITLE">until the quiet comes</text>
+    <text type="TRACK_TITLE">all in</text>
+  </query>
+</queries>

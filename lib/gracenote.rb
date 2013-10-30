@@ -1,36 +1,51 @@
 require "gracenote/HTTP"
 require "gracenote/user"
+require "gracenote/query_builder"
+require "gracenote/request"
+
 require "crack"
-
 module Gracenote
-  class Gracenote
 
+  class Gracenote
     # class variables
     @@ALL_RESULTS = '1'
     @@BEST_MATCH_ONLY = '0'
 
     attr_reader :client_id, :client_tag, :user_id, :client_id_tag
-    # Function: initialize
-    # Sets the following instance variables
-    #   client_id
-    #   client_tag
-    #   user_id
-    #   api_url
-    def initialize (spec)
-      
+
+    def initialize (user)
+      @client_id = user.client_id
+      @client_tag = user.client_tag
+      @user_id = user.user_id
       @api_url = "https://c" + @client_id + ".web.cddbp.net/webapi/xml/1.0/"
     end
-    
-    # public methods
-    public 
 
-    # Function: registerUser 
+    # public methods
+    public
+
+    # Function: registerUser
     # Registers a user and returns user_id
+    def register_user(api_request)
+      return user_id unless user_id.to_s.length == 0
+
+      data =  %Q{<QUERIES>
+              <QUERY CMD='REGISTER'>
+                <CLIENT>#{client_id}</CLIENT>
+              </QUERY>
+            </QUERIES>}
+
+      resp = api_request.post(client_id, data)
+      resp = checkRES resp
+      @user_id = resp['RESPONSES']['RESPONSE']['USER']
+
+      return @user_id
+    end
+
     def registerUser (client_id = nil)
       if(client_id.nil?)
         client_id = @client_id + "-" + @client_tag
       end
-      
+
       if not @user_id.nil?
         p "user already registered. No need to register again"
         return @user_id
@@ -365,7 +380,6 @@ module Gracenote
       input.each do |g|
         output.push({:id => g["ID"].to_i, :text => g})
       end
-      return output
     end
   end
 end

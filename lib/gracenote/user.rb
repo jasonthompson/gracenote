@@ -1,19 +1,43 @@
+require 'gracenote/query_builder'
+require 'gracenote/response'
+require 'builder'
+
 module Gracenote
   class User
-    attr_reader :client_id, :client_tag, :user_id, :client_id_tag
+    attr_reader :client_id, :client_tag, :user_id
 
-    def initialize(spec)
-      if(spec[:client_id].nil? || spec[:client_id] == "") 
-        raise "client_id cannot be nil"
-      end
-      if(spec[:client_tag].nil? || spec[:client_tag] == "")
-        raise "client_tag cannot be nil"
-      end
-
-      @client_id = spec[:client_id]
-      @client_tag = spec[:client_tag]
-      @user_id = spec[:user_id].nil? ? nil : spec[:user_id]
+    def initialize(args)
+      validate_user_info args
+      @client_id = args[:client_id]
+      @client_tag = args[:client_tag]
+      @user_id = args.fetch(:user_id, "")
       @client_id_tag = @client_id + "-" + @client_tag
     end
+
+    def client_id_tag
+      client_id + '-' + client_tag
+    end
+
+    def registered?
+      user_id.length > 0
+    end
+
+    private
+
+    def validate_user_info(user_info)
+      if user_info[:client_id].length == 0
+        raise MissingClientID, "client_id cannot be nil" 
+      end
+
+      if user_info[:client_tag].length == 0
+        raise MissingClientTag, "client_tag cannot be nil"
+      end
+    end
+  end
+
+  class MissingClientID < ArgumentError
+  end
+
+  class MissingClientTag < ArgumentError
   end
 end
